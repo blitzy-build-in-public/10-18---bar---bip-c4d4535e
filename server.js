@@ -13,6 +13,7 @@ const BODY_NOT_FOUND = 'Not Found';
 const PARSE_BASE_URL = 'http://localhost';
 const SHUTDOWN_MESSAGE = 'Shutting down server';
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g;
+const LOG_PATH_DELIMITER_PATTERN = /[?#]/;
 
 function sendText(response, statusCode, body) {
   // statusCode and setHeader let Node derive Content-Length from the single end() write;
@@ -43,7 +44,16 @@ function resolvePathname(requestTarget) {
 }
 
 function logRequest(method, pathname) {
-  console.log(`${new Date().toISOString()} ${method} ${pathname}`);
+  // The logged field is the request path, so a target that failed to parse is cut at its first
+  // '?' or '#': the parsed pathname never carries either, and neither is part of a path.
+  const loggedPath = pathname.split(LOG_PATH_DELIMITER_PATTERN, 1)[0];
+  // The one-line invariant is kept at the sink rather than inherited from the parser's charset,
+  // where a lenient parser or a widened field would break it; for reachable inputs the bytes
+  // emitted are unchanged.
+  console.log(
+    `${new Date().toISOString()} ${escapeControlCharacters(method)} `
+    + `${escapeControlCharacters(loggedPath)}`,
+  );
 }
 
 function handleRequest(request, response) {
@@ -120,7 +130,12 @@ function startServer() {
     if (typeof server.closeAllConnections === 'function') {
       server.closeAllConnections();
     }
-    server.close(() => {
+    // close() reports a server that never listened through its callback's error argument; a failed
+    // bind has already set exit status 1, so the success status is asserted only on a clean close.
+    server.close((error) => {
+      if (error) {
+        return;
+      }
       process.exitCode = 0;
     });
   }

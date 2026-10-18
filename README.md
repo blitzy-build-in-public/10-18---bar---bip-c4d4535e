@@ -214,7 +214,7 @@ Press `CTRL+C` in the terminal where the server is running. That key combination
 Shutting down server
 ```
 
-It then closes its connections, releases the port and exits with status code `0` — the number a program returns to the shell to mean it finished successfully. When you started the server with `node server.js` or `node .`, you can see that number for yourself: `echo $?` prints `0`. If you started it with `npm start`, the message is identical, but the status your shell reports is npm's rather than the server's, and npm reports `130` for a command it is interrupted with.
+It then closes its connections, releases the port and exits with status code `0` — the number a program returns to the shell to mean it finished successfully. If you started it with `npm start`, the message is identical, but the status your shell reports is npm's rather than the server's, and npm reports `130` for a command it is interrupted with.
 
 ## 8. Environment variable configuration
 
