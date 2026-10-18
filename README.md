@@ -156,6 +156,8 @@ Not Found
 
 This answers `404`, not `405 Method Not Allowed`, and the response carries no `Allow` header. The route key is the method together with the path, so an unsupported method is treated exactly like an unknown path.
 
+One detail of that comparison is worth knowing before you experiment. The path the server matches against the route key is the path Node.js's `URL` parser reads out of the request target, and that comparison is exact and case-sensitive, so `/hello` answers `200` while `/hello/`, `/HELLO` and `/` answer `404`. A query string is not part of the path, so `/hello?name=ada` still matches the route and answers `200`. The parser also removes `.` and `..` path segments before the comparison, so `/foo/../hello` and `/./hello` match `/hello` and answer `200` — and because `curl` removes those segments itself before the request leaves your machine, checking that needs `curl --path-as-is`.
+
 Watch the first terminal while you send these requests: every request is logged there as it arrives, including the ones that end in `404`. Section 6 shows those lines.
 
 ## 6. Expected output examples

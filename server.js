@@ -12,6 +12,7 @@ const BODY_HELLO = 'Hello world';
 const BODY_NOT_FOUND = 'Not Found';
 const PARSE_BASE_URL = 'http://localhost';
 const SHUTDOWN_MESSAGE = 'Shutting down server';
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g;
 
 function sendText(response, statusCode, body) {
   // statusCode and setHeader let Node derive Content-Length from the single end() write;
@@ -56,6 +57,13 @@ function handleRequest(request, response) {
   handleNotFound(request, response);
 }
 
+function escapeControlCharacters(value) {
+  return value.replace(CONTROL_CHARACTER_PATTERN, (character) => {
+    const characterCode = character.charCodeAt(0);
+    return `\\u${characterCode.toString(16).padStart(4, '0')}`;
+  });
+}
+
 function parsePort(rawPort) {
   if (rawPort === undefined || rawPort === '') {
     return DEFAULT_PORT;
@@ -64,14 +72,20 @@ function parsePort(rawPort) {
   if (Number.isInteger(port) && port >= MIN_PORT && port <= MAX_PORT) {
     return port;
   }
+  const escapedValue = escapeControlCharacters(rawPort);
   console.error(
-    `Error: PORT must be an integer between ${MIN_PORT} and ${MAX_PORT}; received "${rawPort}".`,
+    `Error: PORT must be an integer between ${MIN_PORT} and ${MAX_PORT}; received `
+    + `"${escapedValue}".`,
   );
-  process.exit(1);
+  process.exitCode = 1;
+  return null;
 }
 
 function startServer() {
   const port = parsePort(process.env.PORT);
+  if (port === null) {
+    return;
+  }
   const server = http.createServer(handleRequest);
 
   function onListening() {
@@ -106,7 +120,7 @@ function startServer() {
     } else {
       console.error(`Error: server failed to start: ${error.code} - ${error.message}`);
     }
-    process.exit(1);
+    process.exitCode = 1;
   });
 
   process.on('SIGINT', shutdown);
