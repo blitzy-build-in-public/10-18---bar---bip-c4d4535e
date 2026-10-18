@@ -81,7 +81,20 @@ function parsePort(rawPort) {
   return null;
 }
 
+// A stdout write that cannot be delivered (a pipe reader that has exited, a full disk, a closed
+// descriptor) is reported as an 'error' event on the stream, and Node rethrows an unhandled one.
+// The process would then die with a stack trace and exit status 1, and the SIGINT status 0 would
+// stop being deterministic. Consuming the event loses only the line that could not be delivered,
+// so the server keeps serving and every exit status stays the one the lifecycle sets.
+function handleUndeliverableLogLine() {
+  // The sink that could not take the line is the broken one: there is nowhere left to report the
+  // loss to, so there is nothing further to do.
+}
+
 function startServer() {
+  // Registered before the first console write, so a sink failure cannot escape as an uncaught
+  // exception.
+  process.stdout.on('error', handleUndeliverableLogLine);
   const port = parsePort(process.env.PORT);
   if (port === null) {
     return;
