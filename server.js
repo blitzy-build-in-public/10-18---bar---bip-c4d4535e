@@ -78,7 +78,15 @@ function startServer() {
     console.log(`Server listening on port ${port}`);
   }
 
+  // A repeated CTRL+C must not re-enter this shutdown: the first interrupt prints the
+  // message, releases connections and starts the close that sets the exit status.
+  let isShuttingDown = false;
+
   function shutdown() {
+    if (isShuttingDown) {
+      return;
+    }
+    isShuttingDown = true;
     console.log(SHUTDOWN_MESSAGE);
     // closeAllConnections() was added in Node.js 18.2.0, above the declared >=18.0.0 floor, so it
     // is called only where the running runtime provides it.
