@@ -41,7 +41,7 @@ node server.js
 Server listening on port 3000
 ```
 
-The command keeps running in the foreground — that is the server at work. A *port* is the numbered channel on your machine that the server listens on; `3000` is the default. Leave this terminal as it is, because it is busy running the server and prints a line for every request that arrives. Open a second terminal for the requests in section 5.
+The command keeps running in the foreground — that is the server at work. A *port* is the numbered channel on your machine that the server listens on; `3000` is the default. Leave this terminal as it is, because it is busy running the server and prints a line for every request it handles. Open a second terminal for the requests in section 5.
 
 You can start the same server through npm instead:
 
@@ -116,7 +116,7 @@ Reading that response, line by line:
 - *headers* are the `name: value` pairs that carry metadata about the response, and they end at the blank line;
 - `Content-Type: text/plain` says the body is plain text rather than HTML or JSON;
 - `Content-Length: 11` says the body is 11 bytes long;
-- `Date`, `Connection` and `Keep-Alive` are added by Node.js itself. The `Date` value is the current time on the server, so it differs on every request.
+- `Date`, `Connection` and `Keep-Alive` are added by Node.js itself. The `Date` value is the current time on the server; Node refreshes it about once a second and reuses it in between, so requests sent in quick succession carry the same value.
 
 Ask for a path that does not exist:
 
@@ -158,7 +158,7 @@ This answers `404`, not `405 Method Not Allowed`, and the response carries no `A
 
 One detail of that comparison is worth knowing before you experiment. The path the server matches against the route key is the path Node.js's `URL` parser reads out of the request target, and that comparison is exact and case-sensitive, so `/hello` answers `200` while `/hello/`, `/HELLO` and `/` answer `404`. A query string is not part of the path, so `/hello?name=ada` still matches the route and answers `200`. The parser also removes `.` and `..` path segments before the comparison, so `/foo/../hello` and `/./hello` match `/hello` and answer `200` — and because `curl` removes those segments itself before the request leaves your machine, checking that needs `curl --path-as-is`.
 
-Watch the first terminal while you send these requests: every request is logged there as it arrives, including the ones that end in `404`. Section 6 shows those lines.
+Watch the first terminal while you send these requests: every request it handles is logged there as it arrives, including the ones that end in `404`. Section 6 shows those lines.
 
 ## 6. Expected output examples
 
